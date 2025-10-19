@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background-color: #000;
+      color: white;
+    }
+
+    #instruction-text {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 8px 16px;
+      border-radius: 8px;
+      z-index: 10;
+      animation: pulse 2s infinite;
+      width: 80%;
+      max-width: 300px;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.7; }
+      50% { opacity: 1; }
+      100% { opacity: 0.7; }
+    }
+
+    #close-button {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(255, 255, 255, 0.3);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      z-index: 10000;
+      display: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .model-container {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 5;
+      background: transparent !important;
+      touch-action: none;
+    }
+
+    model-viewer {
+      width: 100%;
+      height: 100%;
+      --poster-color: transparent;
+      background: transparent !important; 
+    }
+
+    .a-canvas {
+      z-index: 1;
+    }
+
+    #audio-control {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background-color: rgba(255, 255, 255, 0.3);
+      color: white;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+
+    .mindar-ui-overlay,
+    .mindar-ui-scanning,
+    .mindar-ui-overlay.hidden,
+    .mindar-ui-scanning.hidden {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+      display: none !important;
+    }
+
+    #scanner-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    #scanner-frame {
+      width: 250px;
+      height: 250px;
+      border: 2px solid white;
+      position: relative;
+      border-radius: 12px;
+    }
+
+    #scan-line {
+      position: absolute;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(to right, transparent, #00ffcc, transparent);
+      top: 0;
+      animation: scan 2s linear infinite;
+      box-shadow: 0 0 8px #00ffcc;
+    }
+
+    @keyframes scan {
+      0% { top: 0; }
+      100% { top: 100%; }
+    }
+
+    .scanner-corner {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #00ffcc;
+    }
+
+    .corner-tl {
+      top: -2px;
+      left: -2px;
+      border-right: none;
+      border-bottom: none;
+    }
+
+    .corner-tr {
+      top: -2px;
+      right: -2px;
+      border-left: none;
+      border-bottom: none;
+    }
+
+    .corner-bl {
+      bottom: -2px;
+      left: -2px;
+      border-right: none;
+      border-top: none;
+    }
+
+    .corner-br {
+      bottom: -2px;
+      right: -2px;
+      border-left: none;
+      border-top: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="instruction-text">لطفا دوربین را مقابل لوگو قرار دهید</div>
+
+  <div id="scanner-overlay">
+    <div id="scanner-frame">
+      <div id="scan-line"></div>
+      <div class="scanner-corner corner-tl"></div>
+      <div class="scanner-corner corner-tr"></div>
+      <div class="scanner-corner corner-bl"></div>
+      <div class="scanner-corner corner-br"></div>
+    </div>
+  </div>
+
+  <div class="model-container" id="model-container">
+    <model-viewer
+      id="icecream-model"
+      src="hello_kitty.glb"
+      autoplay
+      animation-name="Take 001"
+      environment-image="legacy"
+      exposure="1.2"
+      camera-orbit="0deg 90deg 105%"
+      field-of-view="10deg"
+      disable-zoom
+      interaction-prompt="none"
+      auto-rotate
+      auto-rotate-delay="0"
+      rotation-per-second="30deg">
+    </model-viewer>
+  </div>
+
+  <a-scene mindar-image="imageTargetSrc: target.mind;"
+           uiLoading: false; uiScanning: true; uiError: false;
+           color-space="sRGB"
+           renderer="colorManagement: true, physicallyCorrectLights"
+           vr-mode-ui="enabled: false"
+           device-orientation-permission-ui="enabled: false">
+    <a-assets>
+      <a-asset-item id="icecream" src="hello_kitty.glb"></a-asset-item>
+      <!-- افزودن آهنگ به assets -->
+      <audio id="background-music" src="aleftab_school (5).mp3" preload="auto"></audio>
+    </a-assets>
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <a-entity mindar-image-target="targetIndex: 0">
+      <a-gltf-model rotation="0 0 0" position="0 0 0.1" scale="0.008 0.008 0.008" src="#icecream" visible="false"></a-gltf-model>
+    </a-entity>
+  </a-scene>
+
+  <button id="close-button">بستن مدل</button>
+  <button id="audio-control">♪</button>
+
+  <script>
+    const scene = document.querySelector('a-scene');
+    const modelContainer = document.getElementById('model-container');
+    const closeButton = document.getElementById('close-button');
+    const instructionText = document.getElementById('instruction-text');
+    const scannerOverlay = document.getElementById('scanner-overlay');
+    const modelViewer = document.getElementById('icecream-model');
+    const audioControl = document.getElementById('audio-control');
+    let modelShown = false;
+    
+    // دریافت المان صدا
+    const backgroundMusic = document.getElementById('background-music');
+    backgroundMusic.volume = 0.5; // تنظیم حجم صدا
+    
+    // تنظیم وضعیت اولیه دکمه صدا
+    audioControl.style.display = 'none';
+
+    scene.addEventListener('targetFound', () => {
+      if (!modelShown) {
+        modelShown = true;
+        modelContainer.style.display = 'block';
+        closeButton.style.display = 'block';
+        instructionText.style.display = 'none';
+        scannerOverlay.style.display = 'none'; // مخفی کردن اسکنر
+        modelViewer.autoRotate = true;
+        
+        // پخش آهنگ به صورت خودکار
+        backgroundMusic.play().catch(e => {
+          console.log("خطا در پخش خودکار صدا: ", e);
+        });
+        
+        // نمایش دکمه کنترل صدا
+        audioControl.style.display = 'flex';
+        
+        document.querySelectorAll('.mindar-ui-overlay, .mindar-ui-scanning').forEach(el => {
+          el.style.display = 'none';
+          el.style.opacity = '0';
+          el.style.visibility = 'hidden';
+        });
+      }
+    });
+
+    closeButton.addEventListener('click', () => {
+      modelContainer.style.display = 'none';
+      closeButton.style.display = 'none';
+      instructionText.style.display = 'block';
+      scannerOverlay.style.display = 'flex'; // نمایش مجدد اسکنر
+      modelShown = false;
+      modelViewer.autoRotate = false;
+      
+      // توقف آهنگ هنگام بستن مدل
+      backgroundMusic.pause();
+      backgroundMusic.currentTime = 0;
+      
+      // مخفی کردن دکمه کنترل صدا
+      audioControl.style.display = 'none';
+    });
+    
+    // کنترل صدا
+    let isMuted = false;
+    audioControl.addEventListener('click', () => {
+      if (isMuted) {
+        backgroundMusic.volume = 0.5;
+        audioControl.textContent = '♪';
+        isMuted = false;
+      } else {
+        backgroundMusic.volume = 0;
+        audioControl.textContent = '🔇';
+        isMuted = true;
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+
+
